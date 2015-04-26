@@ -68,8 +68,6 @@ CREATE_MODULE("bro", "0.0.1", "0.0.0");
 
 void initModule(void) {
 
-  fprintf(stderr, "XXX: bro IT LOADED\n");
-
   fs::path logsPath = detectBroLogsPath();
 
   if (fs::exists(logsPath) && fs::is_directory(logsPath)) {
