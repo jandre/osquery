@@ -14,3 +14,8 @@ ADD_OSQUERY_LIBRARY(TRUE osquery_extensions
 )
 
 ADD_OSQUERY_TEST(TRUE extensions_test extensions_tests.cpp)
+
+if(BRO)
+ADD_OSQUERY_MODULE(bro bro/bro_module.cpp bro/bro_table.cpp)
+endif()
+
