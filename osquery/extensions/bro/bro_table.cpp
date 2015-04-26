@@ -32,11 +32,15 @@ std::string BroField::name() const {
 }
 
 std::string BroField::tableType() const {
-  std::string t("TEXT");
+  return tableType_;
+}
+
+void BroField::setType(std::string type) {
+  type_ = type;
+  tableType_ = "TEXT";
   if (type_ == "count" || type_ == "port" || type_ == "int") {
-    t = "INTEGER";
+    tableType_ = "INTEGER";
   }
-  return t;
 }
 
 void BroHeader::readFields(std::string &input) {
@@ -53,13 +57,12 @@ void BroHeader::readTypes(std::string &input) {
   auto types = split(input, this->separator);
   int pos = 0;
   for (auto &type:types) {
-    // fprintf(stderr, "XX: read type: %s\n", type.c_str());
-    this->fields[pos++].type_ = type;
+    this->fields[pos++].setType(type);
   }
 }
 
 bool BroHeader::read(fs::path &logPath) {
-  
+
   if (fs::exists(logPath)) {
     std::ifstream fin(logPath.string());
     std::string line;
@@ -67,13 +70,13 @@ bool BroHeader::read(fs::path &logPath) {
     while (std::getline(fin, line)) {
       boost::trim(line);
 
-      if (!line.size()) { 
-        continue; 
+      if (!line.size()) {
+        continue;
       }
       if (line.at(0) == '#') {
         readHeader(line);
       } else {
-        break; 
+        break;
       }
     }
   }
@@ -93,7 +96,16 @@ void BroHeader::readHeader(std::string &line) {
     } else {
       this->separator = sep;
     }
-  } else if (boost::starts_with(line, "#fields")) {
+  }
+  else if (boost::starts_with(line, "#empty_field")) {
+    auto empty_field = line.substr(strlen("#empty_field") + this->separator.size());
+    empty_field_ = empty_field;
+  }
+  else if (boost::starts_with(line, "#unset_field")) {
+    auto unset_field = line.substr(strlen("#unset_field") + this->separator.size());
+    unset_field_ = unset_field;
+  }
+  else if (boost::starts_with(line, "#fields")) {
     auto fields = line.substr(strlen("#fields") + 1);
     this->readFields(fields);
   } else if (boost::starts_with(line, "#types")) {
@@ -113,7 +125,15 @@ void BroHeader::parse(std::string &line, QueryData &results) {
   }
   for (auto &val : vals) {
     auto &field = this->fields[pos++];
-    row[field.name()] = val;
+    if (val == unset_field_ || val == empty_field_) {
+      if (field.tableType_ == "INTEGER") {
+        row[field.name()] = "-1" ;
+      } else {
+        row[field.name()] = "";
+      }
+    } else {
+      row[field.name()] = val;
+    }
   }
   results.push_back(row);
 }
@@ -123,7 +143,7 @@ tables::TableColumns BroHeader::tableColumns() const {
   for (auto &field: this->fields) {
     result.push_back(std::pair<std::string,std::string>(
          field.name(),
-         field.tableType())); 
+         field.tableType()));
   }
   return result;
 }

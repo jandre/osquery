@@ -7,10 +7,10 @@
 namespace fs = boost::filesystem;
 namespace pt = boost::property_tree;
 
-using namespace osquery; 
+using namespace osquery;
 
 // The path to the default bro logs folder.
-// You can re-set this using -DBRO_LOGS_FOLDER=... in cmake 
+// You can re-set this using -DBRO_LOGS_FOLDER=... in cmake
 #ifndef DEFAULT_BRO_LOGS_FOLDER
 #define DEFAULT_BRO_LOGS_FOLDER "/opt/bro/logs"
 #endif
@@ -22,6 +22,7 @@ class BroField {
     std::string name_;
     int position_;
     std::string type_;
+    std::string tableType_;
 
     BroField(std::string &name, int pos, std::string &type) {
       name_ = name;
@@ -29,7 +30,8 @@ class BroField {
       position_ = pos;
       type_ = type;
     }
-
+    
+    void setType(std::string);
     std::string tableType() const;
     std::string name() const;
 
@@ -39,6 +41,9 @@ class BroHeader {
 
   private:
     bool ready_ = false;
+    std::string unset_field_;
+    std::string empty_field_;
+
     void readFields(std::string &input);
     void readTypes(std::string &input);
 

@@ -27,12 +27,12 @@ class BroTable: public tables::TablePlugin {
         std::string line;
         while (std::getline(fin, line)) {
           boost::trim(line);
-          if (!line.size()) { 
-            continue; 
+          if (!line.size()) {
+            continue;
           }
           if (line.at(0) != '#') {
             header_.parse(line, results);
-          } 
+          }
         }
       }
     }
@@ -44,7 +44,7 @@ class BroTable: public tables::TablePlugin {
   public:
 
     BroTable() {
-      columns_ = {}; //{{"example_text", "TEXT"}, {"example_integer", "INTEGER"}};
+      columns_ = {};
     }
 
     void setTable(BroHeader &header, fs::path &logPath) {
@@ -54,9 +54,6 @@ class BroTable: public tables::TablePlugin {
     }
 
     tables::TableColumns columns() const {
-      // for (auto h : columns_) {
-        // fprintf(stderr, "XXX fields: %s %s \n", h.first.c_str(), h.second.c_str());
-      // }
       return columns_;
     }
 
@@ -71,6 +68,8 @@ CREATE_MODULE("bro", "0.0.1", "0.0.0");
 
 void initModule(void) {
 
+  fprintf(stderr, "XXX: bro IT LOADED\n");
+
   fs::path logsPath = detectBroLogsPath();
 
   if (fs::exists(logsPath) && fs::is_directory(logsPath)) {
@@ -78,9 +77,9 @@ void initModule(void) {
     fs::directory_iterator end;
     for(fs::directory_iterator dir_iter(logsPath); dir_iter != end; ++dir_iter)
     {
-      if (fs::is_regular_file(dir_iter->status()) && 
+      if (fs::is_regular_file(dir_iter->status()) &&
           (dir_iter->path().extension() == ".log")) {
- 
+
         auto tableName = std::string("bro_") + dir_iter->path().stem().string();
         fs::path tablePath = dir_iter->path();
 
@@ -90,7 +89,7 @@ void initModule(void) {
           auto table = std::dynamic_pointer_cast<BroTable>(
               Registry::get("table", tableName.c_str()));
           table->setTable(header, tablePath);
-          fprintf(stderr, "XXX: bro module loaded %s\n", tableName.c_str()); 
+          // fprintf(stderr, "XXX: bro module loaded %s\n", tableName.c_str());
         }
       }
     }
